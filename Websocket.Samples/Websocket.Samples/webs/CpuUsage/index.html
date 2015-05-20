@@ -1,0 +1,205 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>beetle express webchat sample</title>
+
+      <link rel="stylesheet" href="../css/bootswatch.min.css">
+    <link href="../css/bootstrap.min.css" rel="stylesheet" />
+    <script src="../js/jquery-1.10.2.min.js"></script>
+    <script src="../js/bootstrap.min.js"></script>
+
+    <script src="../js/json2.js"></script>
+    <script src="../js/beetle.websocket.js"></script>
+
+    <script type="text/javascript">
+       
+        var users = new Object();
+        var wsUri = "ws://127.0.0.1:9124/";
+        var name;
+        var output;
+        var websocket = null;
+        var islogin = false;
+        var cores = null;
+        var colors = ["#FC0000", "#00FF6A", "#92E5FC", "#FC0093", "#EAFF00", "#F7ABD7", "#F7ABAB", "#9C00FC", "#D9A5FA", "#2B00FF", "#B3A3FF", "#00C8FF", "#8AFFBB", "#F6FF96"
+        , "#FF4800", "#FCBA9F"];
+        function point() {
+            this.x = 0;
+            this.y = 0;
+        }
+        function core() {
+            this.name = "";
+            this.items = new Array();
+            this.strokeStyle = "#ff0000";
+            this.canva = "";
+            for (i = 0; i <= 200; i++) {
+                var p = new point();
+                p.x = i * 5;
+            
+                p.y = 210;
+                this.items.push(p);
+            }
+            
+        }
+        core.prototype.push = function (value) {
+            var length=this.items.length - 1;
+            for (i = 0; i <length; i++) {
+                var l = this.items[i ];
+                var c = this.items[i+1];
+                if(c && l)
+                    l.y = c.y;
+            }
+            var p = this.items[this.items.length-1];
+            p.y = 200 - (value / 100 * 200);
+           
+            
+        }
+        core.prototype.draw = function () {
+            var canvas = document.getElementById('myCanvas');
+            var context = canvas.getContext('2d');
+            context.beginPath();
+            var first = this.items[0];
+            context.moveTo(first.x,first.y);
+           
+            for (i = 0; i < this.items.length; i++) {
+                var p = this.items[i];
+             
+                context.lineTo(p.x, p.y);
+            }
+           
+            context.strokeStyle = this.strokeStyle;
+            context.stroke();
+        }
+        function init() {
+            websocket = new WSClient();
+            websocket.onConnect = function (evt) { };
+            websocket.onClose = function (evt) { };
+            websocket.onReceive = function (evt) { };
+            websocket.onError = function (evt) { };
+            websocket.registrAction("stat", state);
+            websocket.connect(wsUri);
+            setInterval(function () {
+
+                var canvas = document.getElementById('myCanvas');
+                var context = canvas.getContext('2d');
+
+                context.clearRect(0, 0, canvas.width, canvas.height);
+                if (cores != null) {
+                    console.warn(cores.length);
+                    for (k = 0; k < cores.length; k++) {
+                        var c = cores[k];
+                      
+                        c.draw();
+                    }
+                }
+            }, 1000);
+        }
+      
+       
+       
+        function state(data, error) {
+          
+            if (!cores) {
+                cores = new Array();
+                for (k = 0; k < data.length; k++) {
+                    var dataitem = data[k];
+                  
+                    var item = new core();
+                    item.name = dataitem.Name;
+                    item.strokeStyle = colors.shift();
+                    cores.push(item);
+                    
+                    
+                }
+                
+            }
+          
+            for (k = 0; k < data.length; k++) {
+                var dataitem = data[k];
+                var c = cores[k];
+               
+                c.push(dataitem.Usage);
+                console.warn(dataitem.Name + ':' + dataitem.Usage);
+            }
+           
+        }
+        window.addEventListener("load", init, false);
+    </script>
+</head>
+<body>
+    <div class="navbar navbar-default navbar-fixed-top" style="height: 20px;">
+        <div class="container">
+            <div class="navbar-header">
+
+                <a href="http://www.ikende.com/" class="navbar-brand">cpu usage</a>
+
+            </div>
+            <div class="navbar-collapse collapse" style="padding-top: 10px;" id="navbar-main">
+                 <ul class="nav navbar-nav">
+                    <li><a href="../helloword/index.html">hello world</a></li>
+                            <li><a href="../cpuusage/index.html">cpu usage</a></li>
+                            <li><a href="../dataserver/index.html">data search</a></li>
+                            <li><a href="../chat/index.html">chat</a></li>
+
+
+                </ul>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="container" style="margin-top: 0px; padding-top: 40px;">
+
+        <div class="row">
+            <div class="col-lg-11">
+                <div class="panel panel-success">
+                    <div class="panel-heading">
+                        <h3 class="panel-title">cpu usage</h3>
+                    </div>
+
+                    <div class="panel-body">
+                        <canvas id="myCanvas" width="1000" height="200"></canvas>
+                       
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+
+
+        <div class="navbar navbar-default  navbar-fixed-bottom">
+            <div style="text-align: center; padding-left: 20px; padding-right: 20px; padding-top: 10px;">
+
+
+                <p style="text-align: center;"><a href="http://wwww.ikende.com/" target="_blank">Copyright © www.ikende.com 2015</a></p>
+
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <script src="../js/bootswatch.js"></script>
+
+    <script>
+        $(document).ready(function () {
+
+        });
+    </script>
+</body>
+<style>
+    body {
+        font-size: 9pt;
+    }
+
+    h3 {
+        font-size: 10pt;
+    }
+
+    .ke-container {
+        margin: auto;
+    }
+</style>
+</html>
